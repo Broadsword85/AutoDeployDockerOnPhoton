@@ -1,0 +1,60 @@
+[
+    {"VMs":[
+        [
+            {"Name":"NewSwarm-Manager-1"},
+            {"Role":"Manager"},
+            {"Datastore" : "NVME"},
+            {"IP" : "10.2.2.245"},
+            {"Host" : "Secondary"}
+        ],
+        [
+            {"Name":"NewSwarm-Manager-2"},
+            {"Role":"Manager"},
+            {"Datastore" : "SATA"},
+            {"IP" : "10.2.2.244"},
+            {"Host" : "Primary"}
+        ],
+        [
+            {"Name":"NewSwarm-Manager-3"},
+            {"Role":"Manager"},
+            {"Datastore" : "SATA"},
+            {"IP" : "10.2.2.243"},
+            {"Host" : "Primary"}
+        ],
+        [
+            {"Name":"NewSwarm-Worker-1"},
+            {"Role":"Worker"},
+            {"Datastore" : "NVME"},
+            {"IP" : "10.2.2.242"},
+            {"Host" : "Secondary"}
+        ],
+        [
+            {"Name":"NewSwarm-Worker-2"},
+            {"Role":"Worker"},
+            {"Datastore" : "SATA"},
+            {"IP" : "10.2.2.241"},
+            {"Host" : "Primary"}
+        ]
+    ]},
+    {"Template":[
+        {"OVF":"C:\\ISO\\Linux\\Photon\\photon_template.ovf"},
+        {"GuestPWFile" : ".\\guest.creds"}
+    ]},
+    {"Network":[
+        {"Gateway" : "10.2.2.1"},
+        {"Slash":"24"},
+        {"DNS":["8.8.8.8","8.8.4.4"]}
+    ]},
+    {"ESX":[
+        [
+            {"Name":"Primary"},
+            {"Addr":"10.1.1.1"},
+            {"CredFile":".\\esxi.creds"}
+        ],
+        [
+            {"Name":"Secondary"},
+            {"Addr":"10.1.1.2"},
+            {"CredFile":".\\esxi.creds"}
+        ]
+    ]}
+]
