@@ -20,7 +20,7 @@ param(
 )
 
 #Includes
-Import-Module vmware.powercli
+#Import-Module vmware.powercli #Apparently this is no longer needed & is imported on-demand
 Import-Module ./dockerdeploy.psm1 -force
 
 #Set the multi-VCenter mode (can skip if using only one VCenter/ESX host)
@@ -129,11 +129,11 @@ Write-Host "Configuring additional Managers & pulling GIT repo"
 
 $gitcmd = @(
     "cd /git",
-    "git clone https://github.com/Broadsword85/DockerHAProxyApache.git",
-    "cd DockerHAProxyApache/",
+    "git clone https://github.com/Broadsword85/MediaWIKIDemo.git",
+    "cd MediaWIKIDemo/",
     "git pull",
     "docker-compose build",
-    "docker stack deploy --compose-file docker-compose.yml DockerHAProxyApache"
+    "docker stack deploy --compose-file docker-compose.yml mediawiki"
 )
 
 foreach($m in $AddionalMasters){

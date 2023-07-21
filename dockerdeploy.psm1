@@ -62,25 +62,44 @@ function deploy-vm {
 
     Start-VM -Server $ESXHost -VM $vm
     
-    $VMNetwork="[Match]
+    $VMNetwork="    [Match]
     Name=e*
     
     [Network]
     Address=$IP/$Slash
     Gateway=$Gateway`n"
     foreach($dnshost in $DNS){
-        $VMNetwork+="DNS=$dnshost`n"
+        $VMNetwork+="    DNS=$dnshost`n"
     }    
 
+    $VMLink = "    [Match]
+    OriginalName=*
+    
+    [Link]
+    NamePolicy=keep kernel database onboard slot path
+    AlternativeNamesPolicy=database onboard slot path
+    MACAddressPolicy=persistent
+    TransmitChecksumOffload=false"
+
     $configNetwork = @(
+        "echo ""$name"" > /etc/hostname", #Overwrite the host name file    
         "echo ""$VMNetwork"" > /etc/systemd/network/20-wired.network.temp", #Write the network config temp file
-        "echo ""$name"" > /etc/hostname", #Overwrite the host name file
         "sed `'s/; /\n/g`' /etc/systemd/network/20-wired.network.temp > /etc/systemd/network/20-wired.network", #Replace the ; character with line breaks
         "rm -rf /etc/systemd/network/20-wired.network.temp", #Remove the temp file
+        "echo ""$VMLink"" > /etc/systemd/network/99-default.link.temp", #Write the network link file
+        "sed `'s/; /\n/g`' /etc/systemd/network/99-default.link.temp > /etc/systemd/network/99-default.link", #Replace the ; character with line breaks
+        "rm -rf /etc/systemd/network/99-default.link.temp", #Remove the temp file
         #"systemctl restart systemd-networkd.service",
-        "iptables -A INPUT -p tcp --dport 2377 -j ACCEPT", #The IPTables bit is actually only needed for the Masters,
-        "iptables -A INPUT -p ICMP -j ACCEPT",#but its easiest to set for all & not worry later if roles change
-        "iptables -A OUTPUT -p ICMP -j ACCEPT",
+        "iptables -A INPUT -p tcp --dport 22 -j ACCEPT", #Allow SSH
+        "iptables -A INPUT -p ICMP -j ACCEPT",#Allow Ping
+        "iptables -A OUTPUT -p ICMP -j ACCEPT",#Allow Ping
+        "iptables -A INPUT -p tcp --dport 2376 -j ACCEPT", #Allow (?)
+        "iptables -A INPUT -p tcp --dport 2377 -j ACCEPT", #This is only needed for the Masters
+        "iptables -A INPUT -p tcp --dport 7946 -j ACCEPT",
+        "iptables -A INPUT -p udp --dport 7946 -j ACCEPT",
+        "iptables -A INPUT -p udp --dport 4789 -j ACCEPT",
+        "iptables -A INPUT -p esp -j ACCEPT",
+        "iptables -A OUTPUT -p esp -j ACCEPT",
         "iptables-save > /etc/systemd/scripts/ip4save", #Saving so it'll be permanent
         "systemctl enable docker", #Start Docker service & make it active on reboots
         "systemctl start docker",
