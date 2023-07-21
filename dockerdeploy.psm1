@@ -118,3 +118,45 @@ function deploy-vm {
 #    checkreadyandrun -VM $vm -GuestPW $GuestPW -cmd 
     return $vm
 }
+
+function Set-LBVIP {
+    param (
+        [Parameter(mandatory=$true)]
+        [string] $ESXHost,
+        [Parameter(mandatory=$true)]
+        [string] $VM,
+        [Parameter(mandatory=$true)]
+        [string] $VIP,
+        [Parameter(mandatory=$true)]
+        [string] $GuestPW,
+        [Parameter()]
+        [int] $Priority
+    )
+    Write-Host "Configuring keepalived on $vm"
+    $conffile = "vrrp_instance VI_1 {
+    state MASTER
+    interface eth0
+    virtual_router_id 51
+    priority $priority
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 12345
+    }
+    virtual_ipaddress {
+        $VIP
+    }
+}"
+
+    $cmd = @(
+    "tdnf install keepalived -y",
+    "echo ""$conffile"" > /etc/keepalived/keepalived.conf.temp", #Write the network config temp file
+    "sed `'s/; /\n/g`' /etc/keepalived/keepalived.conf.temp > /etc/keepalived/keepalived.conf", #Replace the ; character with line breaks
+    "rm -rf /etc/keepalived/keepalived.conf.temp", #Remove the temp file
+    "systemctl enable keepalived",
+    "systemctl start keepalived"
+)
+
+    $return = checkreadyandrun -Server $ESXHost -VM $vm -GuestPW $GuestPW -cmd ($cmd -join ";")
+    return $return
+}

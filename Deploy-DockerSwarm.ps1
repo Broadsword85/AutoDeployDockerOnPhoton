@@ -102,6 +102,12 @@ if("Manager" -notin $data.VMs.Role){
             $joincmd = $joincmd.Substring(0,$len)
             Write-Host $joincmd
             Write-Host ""
+
+            #Add the load balanced IP address
+            Start-Sleep 5
+            $output = Set-LBVIP -ESXHost $MasterHost -VM $vm.Name -VIP $data.Network.LoadBalancedIP -GuestPW $GuestPW -Priority 100
+
+            #Record the manager name for later
             $firstManager = $vm.Name
         } elseif ($vm.Role -eq "Manager" -and $null -ne $firstManager) {
             $AddionalMasters+= $vm.Name
@@ -123,6 +129,8 @@ foreach($vm in $data.VMs){
     )
     $output = checkreadyandrun -VM $vm.Name -GuestPW $GuestPW -cmd ($configWorker -join ";") -Server $thisHost
     Write-Host ""
+    Start-Sleep 5
+    $output = Set-LBVIP -ESXHost $thisHost -VM $vm.Name -VIP $data.Network.LoadBalancedIP -GuestPW $GuestPW -Priority 80 #Lower priority than the primary master
 }
 
 Write-Host "Configuring additional Managers & pulling GIT repo"
